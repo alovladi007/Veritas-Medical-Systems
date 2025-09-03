@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardHeader, CardContent } from './components/ui/card';
+import { Alert, AlertDescription } from './components/ui/alert';
 import { 
   Send, 
   Loader2, 
@@ -19,10 +19,10 @@ import {
 const API_BASE = 'http://localhost:8000';
 
 // Custom hook for WebSocket connection
-const useWebSocket = (url) => {
+const useWebSocket = (url: string) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [lastMessage, setLastMessage] = useState(null);
-  const ws = useRef(null);
+  const [lastMessage, setLastMessage] = useState<any>(null);
+  const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     ws.current = new WebSocket(url);
@@ -35,12 +35,12 @@ const useWebSocket = (url) => {
     };
 
     return () => {
-      ws.current.close();
+      ws.current?.close();
     };
   }, [url]);
 
-  const sendMessage = useCallback((message) => {
-    if (ws.current.readyState === WebSocket.OPEN) {
+  const sendMessage = useCallback((message: any) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(message));
     }
   }, []);
@@ -49,21 +49,23 @@ const useWebSocket = (url) => {
 };
 
 // Triplet Visualization Component
-const TripletGraph = ({ triplets }) => {
-  const canvasRef = useRef(null);
+const TripletGraph = ({ triplets }: { triplets: any[] }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
     if (!triplets || triplets.length === 0) return;
     
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Calculate node positions
-    const nodes = new Map();
-    const edges = [];
+    const nodes = new Map<string, any>();
+    const edges: any[] = [];
     
     triplets.forEach((triplet, index) => {
       const angle = (index * 2 * Math.PI) / triplets.length;
@@ -159,13 +161,13 @@ const KGARevionApp = () => {
   const [questionType, setQuestionType] = useState('multiple_choice');
   const [candidates, setCandidates] = useState(['', '', '', '']);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const [processingStage, setProcessingStage] = useState('');
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [metrics, setMetrics] = useState(null);
-  const [user, setUser] = useState(null);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
   
   // WebSocket connection for real-time updates
   const { isConnected, lastMessage, sendMessage } = useWebSocket(`${API_BASE.replace('http', 'ws')}/ws/medical-qa`);
@@ -190,7 +192,7 @@ const KGARevionApp = () => {
         });
         setIsProcessing(false);
       } else if (lastMessage.type === 'triplet') {
-        setResult(prev => ({
+        setResult((prev: any) => ({
           ...prev,
           triplets: [...(prev?.triplets || []), lastMessage.data]
         }));
@@ -258,7 +260,7 @@ const KGARevionApp = () => {
         }, ...prev].slice(0, 10));
       }
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsProcessing(false);
       setProcessingStage('');
@@ -364,7 +366,7 @@ const KGARevionApp = () => {
                       onChange={(e) => setQuestion(e.target.value)}
                       placeholder="e.g., Which protein is associated with Retinitis Pigmentosa 59?"
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      rows="3"
+                      rows={3}
                       required
                     />
                   </div>
@@ -448,7 +450,7 @@ const KGARevionApp = () => {
                     <div>
                       <h4 className="text-sm font-semibold mb-2">Medical Entities Identified:</h4>
                       <div className="flex flex-wrap gap-2">
-                        {result.entities.map((entity, idx) => (
+                        {result.entities.map((entity: any, idx: number) => (
                           <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
                             {entity}
                           </span>
