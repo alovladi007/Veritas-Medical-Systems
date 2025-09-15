@@ -12,23 +12,41 @@ KGAREVION implements a novel Generate-Review-Revise pipeline:
 
 ## 🚀 Quick Start
 
-### Using Docker Compose (Recommended)
+### Option 1: Docker Compose (Recommended for Production)
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/kgarevion.git
 cd kgarevion
 
-# Copy environment variables
-cp .env.example .env
-
-# Start all services
-docker-compose up -d
+# Run the automated deployment script
+./deploy.sh
 
 # Access the application
 # Frontend: http://localhost:3000
 # API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
 # Neo4j Browser: http://localhost:7474
+```
+
+### Option 2: Development Setup (Local Development)
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/kgarevion.git
+cd kgarevion
+
+# Run the development setup script
+./setup-dev.sh
+
+# Start database services
+./setup-db.sh
+
+# Start backend (in terminal 1)
+./start-backend.sh
+
+# Start frontend (in terminal 2)
+./start-frontend.sh
 ```
 
 ### Manual Installation
@@ -92,13 +110,43 @@ kgarevion/
 
 ## 🔧 Configuration
 
-Key environment variables:
+### Environment Variables
 
-- `DATABASE_URL`: PostgreSQL connection string
-- `NEO4J_URI`: Neo4j database URI
-- `REDIS_HOST`: Redis server host
-- `MODEL_NAME`: LLM model to use (default: Llama-3-8B)
-- `SECRET_KEY`: JWT secret for authentication
+Copy `env.example` to `.env` and configure the following variables:
+
+```bash
+# Database Configuration
+DATABASE_URL=postgresql://medical_qa:password@localhost:5432/kgarevion
+DB_PASSWORD=password
+
+# Neo4j Knowledge Graph Configuration
+NEO4J_URI=neo4j://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=password
+
+# Redis Cache Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Model Configuration
+MODEL_NAME=meta-llama/Llama-3-8B-Instruct
+
+# Security
+SECRET_KEY=your-super-secret-key-change-in-production
+
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000
+
+# Frontend Configuration
+REACT_APP_API_URL=http://localhost:8000
+REACT_APP_WS_URL=ws://localhost:8000
+```
+
+### Default Credentials
+
+- **Admin Username**: `admin`
+- **Admin Password**: `admin123`
 
 ## 📊 Features
 
@@ -109,6 +157,49 @@ Key environment variables:
 - **Authentication**: JWT-based user authentication
 - **Visualization**: Interactive knowledge graph visualization
 - **Metrics**: System performance monitoring
+
+## 🛠️ Deployment Management
+
+### Docker Commands
+
+```bash
+# Start all services
+./deploy.sh
+
+# Stop services
+./deploy.sh stop
+
+# Restart services
+./deploy.sh restart
+
+# View logs
+./deploy.sh logs
+
+# Check service status
+./deploy.sh status
+
+# Clean up everything
+./deploy.sh clean
+```
+
+### Development Commands
+
+```bash
+# Setup development environment
+./setup-dev.sh
+
+# Start backend server
+./start-backend.sh
+
+# Start frontend server
+./start-frontend.sh
+
+# Start database services
+./setup-db.sh
+
+# Clean development environment
+./setup-dev.sh clean
+```
 
 ## 🧪 Running Tests
 

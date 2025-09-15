@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardHeader, CardContent } from './components/ui/card';
 import { Alert, AlertDescription } from './components/ui/alert';
+import { Button } from './components/ui/button';
+import { Textarea } from './components/ui/textarea';
+import { AuthModal } from './components/AuthModal';
 import { 
   Send, 
   Loader2, 
@@ -13,7 +16,8 @@ import {
   User,
   LogOut,
   History,
-  Settings
+  Settings,
+  Login
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
@@ -168,6 +172,7 @@ const KGARevionApp = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [metrics, setMetrics] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   // WebSocket connection for real-time updates
   const { isConnected, lastMessage, sendMessage } = useWebSocket(`${API_BASE.replace('http', 'ws')}/ws/medical-qa`);
@@ -177,6 +182,15 @@ const KGARevionApp = () => {
     fetchMetrics();
     const interval = setInterval(fetchMetrics, 30000); // Update every 30s
     return () => clearInterval(interval);
+  }, []);
+
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    const savedToken = localStorage.getItem('token');
+    if (savedUser && savedToken) {
+      setUser(JSON.parse(savedUser));
+    }
   }, []);
   
   // Handle WebSocket messages
@@ -226,11 +240,12 @@ const KGARevionApp = () => {
         });
       } else {
         // Fallback to REST API
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE}/api/medical-qa`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': user ? `Bearer ${user.token}` : ''
+            'Authorization': token ? `Bearer ${token}` : ''
           },
           body: JSON.stringify({
             text: question,
@@ -304,14 +319,27 @@ const KGARevionApp = () => {
                 <div className="flex items-center space-x-2">
                   <User className="w-5 h-5 text-gray-600" />
                   <span className="text-sm text-gray-700">{user.username}</span>
-                  <button className="p-1 hover:bg-gray-100 rounded">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      localStorage.removeItem('user');
+                      localStorage.removeItem('token');
+                      setUser(null);
+                    }}
+                  >
                     <LogOut className="w-4 h-4 text-gray-600" />
-                  </button>
+                  </Button>
                 </div>
               ) : (
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => setShowAuthModal(true)}
+                >
+                  <Login className="w-4 h-4 mr-1" />
                   Sign In
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -361,11 +389,10 @@ const KGARevionApp = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Your Question
                     </label>
-                    <textarea
+                    <Textarea
                       value={question}
                       onChange={(e) => setQuestion(e.target.value)}
                       placeholder="e.g., Which protein is associated with Retinitis Pigmentosa 59?"
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       rows={3}
                       required
                     />
@@ -397,15 +424,14 @@ const KGARevionApp = () => {
                     </div>
                   )}
                   
-                  <button
+                  <Button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={isProcessing}
-                    className="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                    loading={isProcessing}
+                    className="w-full"
                   >
                     {isProcessing ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         {processingStage || 'Processing...'}
                       </>
                     ) : (
@@ -414,7 +440,7 @@ const KGARevionApp = () => {
                         Submit Question
                       </>
                     )}
-                  </button>
+                  </Button>
                                   </div>
               </CardContent>
             </Card>
@@ -576,6 +602,18 @@ const KGARevionApp = () => {
           </div>
         </div>
       </main>
+      
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={(token, userData) => {
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(userData));
+          setUser(userData);
+          setShowAuthModal(false);
+        }}
+      />
     </div>
   );
 };
